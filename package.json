@@ -1,0 +1,23 @@
+{
+  "name": "智能代办助手",
+  "version": "1.0.0",
+  "description": "一个智能代办助手应用，帮助管理日常任务",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": [
+    "todo",
+    "代办",
+    "任务管理"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "prisma": "^5.14.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0"
+  }
+}
