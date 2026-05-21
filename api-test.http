@@ -1,0 +1,215 @@
+### 智能代办助手 API 测试
+### 使用 VS Code REST Client 插件运行
+### 基础URL: http://localhost:3000/api
+
+@baseUrl = http://localhost:3000/api
+@contentType = application/json
+
+# ============================================
+# 用户认证模块
+# ============================================
+
+### 1. 用户注册
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "test@example.com",
+  "password": "123456",
+  "name": "测试用户"
+}
+
+### 2. 用户登录
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "test@example.com",
+  "password": "123456"
+}
+
+### 3. 登录（获取Token用于后续请求）
+# 成功后，复制返回的 token 到下面的 @token 变量
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "test@example.com",
+  "password": "123456"
+}
+
+# 从登录响应中提取 token（需要手动复制）
+# @token = eyJhbGciOiJIUzI1NiIs...
+
+# ============================================
+# 待办管理模块（需要认证）
+# ============================================
+
+### 4. 创建待办
+POST {{baseUrl}}/todos
+Content-Type: {{contentType}}
+Authorization: Bearer {{login.response.body.data.token}}
+
+{
+  "title": "完成项目文档",
+  "description": "编写API文档和使用说明",
+  "priority": "high",
+  "category": "工作",
+  "dueDate": "2026-05-25"
+}
+
+### 5. 创建待办（中等优先级）
+POST {{baseUrl}}/todos
+Content-Type: {{contentType}}
+Authorization: Bearer {{login.response.body.data.token}}
+
+{
+  "title": "购买生活用品",
+  "description": "去超市买牛奶和面包",
+  "priority": "medium",
+  "category": "生活",
+  "dueDate": "2026-05-20"
+}
+
+### 6. 创建待办（低优先级）
+POST {{baseUrl}}/todos
+Content-Type: {{contentType}}
+Authorization: Bearer {{login.response.body.data.token}}
+
+{
+  "title": "阅读技术文章",
+  "description": "学习React新特性",
+  "priority": "low",
+  "category": "学习",
+  "dueDate": "2026-05-30"
+}
+
+### 7. 获取所有待办
+GET {{baseUrl}}/todos
+Authorization: Bearer {{login.response.body.data.token}}
+
+### 8. 获取待办（筛选：已完成）
+GET {{baseUrl}}/todos?completed=true
+Authorization: Bearer {{login.response.body.data.token}}
+
+### 9. 获取待办（筛选：高优先级）
+GET {{baseUrl}}/todos?priority=high
+Authorization: Bearer {{login.response.body.data.token}}
+
+### 10. 获取待办（筛选：工作分类）
+GET {{baseUrl}}/todos?category=工作
+Authorization: Bearer {{login.response.body.data.token}}
+
+### 11. 更新待办（标记完成）
+# 注意：将 {todoId} 替换为实际的待办ID
+PUT {{baseUrl}}/todos/{todoId}
+Content-Type: {{contentType}}
+Authorization: Bearer {{login.response.body.data.token}}
+
+{
+  "completed": true
+}
+
+### 12. 更新待办（修改内容）
+# 注意：将 {todoId} 替换为实际的待办ID
+PUT {{baseUrl}}/todos/{todoId}
+Content-Type: {{contentType}}
+Authorization: Bearer {{login.response.body.data.token}}
+
+{
+  "title": "更新后的标题",
+  "description": "更新后的描述",
+  "priority": "high",
+  "dueDate": "2026-06-01"
+}
+
+### 13. 删除待办
+# 注意：将 {todoId} 替换为实际的待办ID
+DELETE {{baseUrl}}/todos/{todoId}
+Authorization: Bearer {{login.response.body.data.token}}
+
+# ============================================
+# 数据看板模块（需要认证）
+# ============================================
+
+### 14. 获取统计概览
+GET {{baseUrl}}/dashboard/stats
+Authorization: Bearer {{login.response.body.data.token}}
+
+### 15. 获取趋势数据
+GET {{baseUrl}}/dashboard/trends
+Authorization: Bearer {{login.response.body.data.token}}
+
+### 16. 获取分类统计
+GET {{baseUrl}}/dashboard/categories
+Authorization: Bearer {{login.response.body.data.token}}
+
+# ============================================
+# 错误测试用例
+# ============================================
+
+### 17. 注册（邮箱已存在）
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "test@example.com",
+  "password": "123456"
+}
+
+### 18. 注册（邮箱格式错误）
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "invalid-email",
+  "password": "123456"
+}
+
+### 19. 注册（密码太短）
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "new@example.com",
+  "password": "123"
+}
+
+### 20. 登录（密码错误）
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "test@example.com",
+  "password": "wrongpassword"
+}
+
+### 21. 访问受保护路由（无Token）
+GET {{baseUrl}}/todos
+
+### 22. 访问受保护路由（无效Token）
+GET {{baseUrl}}/todos
+Authorization: Bearer invalid_token_here
+
+### 23. 创建待办（缺少必填字段）
+POST {{baseUrl}}/todos
+Content-Type: {{contentType}}
+Authorization: Bearer {{login.response.body.data.token}}
+
+{
+  "description": "没有标题的待办"
+}
+
+### 24. 更新不存在的待办
+PUT {{baseUrl}}/todos/99999
+Content-Type: {{contentType}}
+Authorization: Bearer {{login.response.body.data.token}}
+
+{
+  "title": "不存在的待办"
+}
+
+### 25. 删除不存在的待办
+DELETE {{baseUrl}}/todos/99999
+Authorization: Bearer {{login.response.body.data.token}}

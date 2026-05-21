@@ -1,61 +1,100 @@
-import { useState } from 'react';
-import { AppProvider, useApp } from './context/AppContext';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from './stores/authStore';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
-import Sidebar from './components/Layout/Sidebar';
 import TodoList from './pages/Todos/TodoList';
 import Dashboard from './pages/Dashboard/Dashboard';
 
-const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+// 公开路由（未登录可访问，已登录重定向）
+const PublicRoute = ({ children }) => {
+  const location = useLocation();
+  const { isAuthenticated, isLoading, initAuth } = useAuthStore();
 
-  return (
-    <div className="min-h-screen">
-      {isLogin ? (
-        <Login onSwitchToRegister={() => setIsLogin(false)} />
-      ) : (
-        <Register onSwitchToLogin={() => setIsLogin(true)} />
-      )}
-    </div>
-  );
-};
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
 
-const MainApp = () => {
-  const [currentView, setCurrentView] = useState('todos');
-  const { loading } = useApp();
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen p-4">
-      <div className="flex gap-4 h-[calc(100vh-2rem)]">
-        <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        {currentView === 'todos' ? <TodoList /> : <Dashboard />}
+  if (isAuthenticated) {
+    const from = location.state?.from || '/todos';
+    return <Navigate to={from} replace />;
+  }
+
+  return children;
+};
+
+// 受保护路由（需登录）
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, isLoading, initAuth } = useAuthStore();
+
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 };
 
 function App() {
-  const { user } = useApp();
-
-  if (!user) {
-    return <AuthPage />;
-  }
-
-  return <MainApp />;
-}
-
-export default function WrappedApp() {
   return (
-    <AppProvider>
-      <App />
-    </AppProvider>
+    <Router>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/todos"
+          element={
+            <ProtectedRoute>
+              <TodoList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/todos" replace />} />
+        <Route path="*" element={<Navigate to="/todos" replace />} />
+      </Routes>
+    </Router>
   );
 }
+
+export default App;

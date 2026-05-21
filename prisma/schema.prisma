@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = env("DATABASE_PROVIDER", "sqlite")
   url      = env("DATABASE_URL")
 }
 
@@ -19,16 +19,18 @@ model User {
 }
 
 model Todo {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  completed   Boolean  @default(false)
-  priority    String
-  category    String   @default("工作")
-  dueDate     DateTime?
-  userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  completed      Boolean  @default(false)
+  priority       String
+  category       String   @default("工作")
+  dueDate        DateTime?
+  recurrence     String?   // 重复规则: daily, weekly, monthly, yearly, null
+  reminderOffset Int?      // 提醒时间(分钟): 0=准时, 5=提前5分钟, 15=提前15分钟
+  userId         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

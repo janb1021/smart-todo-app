@@ -11,6 +11,9 @@ node_modules/
 .env.local
 .env.*.local
 
+# 保留模板文件（提交到仓库）
+!.env.example
+
 # Build outputs
 dist/
 build/
