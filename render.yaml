@@ -29,11 +29,8 @@ services:
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
-      - key: VITE_API_URL
-        fromService:
-          name: smart-todo-backend
-          type: web
-          property: url
+      - key: VITE_API_BASE_URL
+        value: https://smart-todo-backend.onrender.com/api
 
 databases:
   - name: smart-todo-db
